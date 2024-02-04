@@ -50,7 +50,7 @@ char *GetFileName() {
     return file_name;
 }
 
-void SaveScreenShot_PNG(void *data) {
+void TakeScreenShot_PNG(void *data) {
     png_structp png = NULL;
     png_infop info = NULL;
     png_bytepp row_pointers = data;
@@ -95,14 +95,14 @@ void SaveScreenShot_PNG(void *data) {
     TAKING = 0;
 }
 
-void SaveScreenShot() {
+void TakeScreenShot() {
     if (!TAKING) {
         TAKING = 1;
         Sie_GUI_MsgBox("Taking screenshot...");
         unsigned char *bitmap = GetScreenBuffer();
         png_bytepp row_pointers = ScreenBuffer2BytePP(bitmap);
         mfree(bitmap);
-        Sie_SubProc_Run(SaveScreenShot_PNG, row_pointers);
+        Sie_SubProc_Run(TakeScreenShot_PNG, row_pointers);
     } else {
         Sie_GUI_MsgBoxError("Screenshot is taking...");
     }
@@ -120,7 +120,7 @@ int KeyHook(int submsg, int msg) {
             }
         }
         else if (msg == LONG_PRESS) {
-            SaveScreenShot();
+            TakeScreenShot();
             return KEYHOOK_BREAK;
         }
         else if (msg == KEY_UP) {
