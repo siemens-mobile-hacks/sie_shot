@@ -109,9 +109,25 @@ void SaveScreenShot() {
 }
 
 int KeyHook(int submsg, int msg) {
-    if (msg == LONG_PRESS && submsg == GREEN_BUTTON) {
-        SaveScreenShot();
-        return KEYHOOK_BREAK;
+    static int flag = 0;
+    if (submsg == GREEN_BUTTON) {
+        if (msg == KEY_DOWN) {
+            if (flag) {
+                flag = 0;
+                return KEYHOOK_NEXT;
+            } else {
+                return KEYHOOK_BREAK;
+            }
+        }
+        else if (msg == LONG_PRESS) {
+            SaveScreenShot();
+            return KEYHOOK_BREAK;
+        }
+        else if (msg == KEY_UP) {
+            flag = 1;
+            GBS_SendMessage(MMI_CEPID, KEY_DOWN, GREEN_BUTTON);
+            return KEYHOOK_NEXT;
+        }
     }
     return KEYHOOK_NEXT;
 }
