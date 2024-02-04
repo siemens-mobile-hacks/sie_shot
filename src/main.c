@@ -39,15 +39,20 @@ png_bytepp ScreenBuffer2BytePP(unsigned const char *bitmap) {
     return row_pointers;
 }
 
-char *GetFileName() {
-    char *file_name = malloc(128);
+char *GetPath(const char *ext) {
     TDate date;
     TTime time;
+    char *path = NULL;
+    char file_name[64];
     GetDateTime(&date, &time);
-    sprintf(file_name, "%02d_%02d_%02d-%02d_%02d_%02d.png",
+    sprintf(file_name, "%02d_%02d_%02d-%02d_%02d_%02d.%s",
             date.day, date.month, (unsigned int)(date.year - 2000),
-            time.hour, time.min, time.sec);
-    return file_name;
+            time.hour, time.min, time.sec,
+            ext);
+    path = malloc(strlen(DIR) + strlen(file_name) + 1);
+    strcpy(path, DIR);
+    strcat(path, file_name);
+    return path;
 }
 
 void TakeScreenShot_PNG(void *data) {
@@ -55,11 +60,7 @@ void TakeScreenShot_PNG(void *data) {
     png_infop info = NULL;
     png_bytepp row_pointers = data;
 
-    char *file_name = GetFileName();
-    char *path = malloc(strlen(DIR) + strlen(file_name) + 1);
-    strcpy(path, DIR);
-    strcat(path, file_name);
-    mfree(file_name);
+    char *path = GetPath("png");
     FILE *fp = fopen(path, "wb");
     mfree(path);
 
