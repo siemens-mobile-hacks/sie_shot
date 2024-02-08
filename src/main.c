@@ -84,14 +84,14 @@ void TakeScreenShot_PNG(void *data) {
         }
         fclose(fp);
         png_destroy_write_struct(&png, &info);
-        Sie_GUI_MsgBoxOk("Screenshot saved");
+        Sie_GUI_MsgBoxOk("Screenshot saved", NULL);
     }
     for (int i = 0; i < ScreenH(); i++) {
         mfree(row_pointers[i]);
     }
     mfree(row_pointers);
     if (err) {
-        Sie_GUI_MsgBoxError("Error saving screenshot");
+        Sie_GUI_MsgBoxError("Error saving screenshot", NULL);
     }
     TAKING = 0;
 }
@@ -99,13 +99,13 @@ void TakeScreenShot_PNG(void *data) {
 void TakeScreenShot() {
     if (!TAKING) {
         TAKING = 1;
-        Sie_GUI_MsgBox("Taking screenshot...");
+        Sie_GUI_MsgBox("Taking screenshot...", NULL);
         unsigned char *bitmap = GetScreenBuffer();
         png_bytepp row_pointers = ScreenBuffer2BytePP(bitmap);
         mfree(bitmap);
         Sie_SubProc_Run(TakeScreenShot_PNG, row_pointers);
     } else {
-        Sie_GUI_MsgBoxError("Screenshot is taking...");
+        Sie_GUI_MsgBoxError("Screenshot is taking...", NULL);
     }
 }
 
