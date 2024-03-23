@@ -1,5 +1,7 @@
 #include <swilib.h>
 #include <stdlib.h>
+#include <string.h>
+#include <png.h>
 #include <sie/sie.h>
 
 const int minus11=-11;
