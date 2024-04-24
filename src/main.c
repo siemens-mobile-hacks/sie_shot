@@ -1,10 +1,10 @@
 #include <swilib.h>
+#include <png.h>
 #include <stdlib.h>
 #include <string.h>
-#include <png.h>
 #include <sie/sie.h>
 
-const int minus11=-11;
+const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
 
 unsigned int TAKING;
@@ -86,14 +86,14 @@ void TakeScreenShot_PNG(void *data) {
         }
         fclose(fp);
         png_destroy_write_struct(&png, &info);
-        Sie_GUI_MsgBoxOk("Screenshot saved", NULL);
+        ShowMSG(1, (int)"Screenshot saved");
     }
     for (int i = 0; i < ScreenH(); i++) {
         mfree(row_pointers[i]);
     }
     mfree(row_pointers);
     if (err) {
-        Sie_GUI_MsgBoxError("Error saving screenshot", NULL);
+        MsgBoxError(1, (int)"Error saving screenshot!");
     }
     TAKING = 0;
 }
@@ -101,13 +101,13 @@ void TakeScreenShot_PNG(void *data) {
 void TakeScreenShot() {
     if (!TAKING) {
         TAKING = 1;
-        Sie_GUI_MsgBox("Taking screenshot...", NULL);
+        ShowMSG(1, (int)"Taking screenshot...");
         unsigned char *bitmap = GetScreenBuffer();
         png_bytepp row_pointers = ScreenBuffer2BytePP(bitmap);
         mfree(bitmap);
         Sie_SubProc_Run(TakeScreenShot_PNG, row_pointers);
     } else {
-        Sie_GUI_MsgBoxError("Screenshot is taking...", NULL);
+        MsgBoxError(1, (int)"Screenshot is taking...");
     }
 }
 
