@@ -41,6 +41,14 @@ png_bytepp ScreenBuffer2BytePP(unsigned const char *bitmap) {
     return row_pointers;
 }
 
+void CreateOutDir() {
+    unsigned int err;
+    if (Sie_FS_MMCardExists()) {
+        DIR[0] = '4';
+    }
+    Sie_FS_CreateDirs(DIR, &err);
+}
+
 char *GetPath(const char *ext) {
     TDate date;
     TTime time;
@@ -62,6 +70,7 @@ void TakeScreenShot_PNG(void *data) {
     png_infop info = NULL;
     png_bytepp row_pointers = data;
 
+    CreateOutDir();
     char *path = GetPath("png");
     FILE *fp = fopen(path, "wb");
     mfree(path);
@@ -140,12 +149,7 @@ int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
 }
 
 void maincsm_oncreate(CSM_RAM *data) {
-    unsigned int err = 0;
     AddKeybMsgHook(KeyHook);
-    if (Sie_FS_MMCardExists()) {
-        DIR[0] = '4';
-    }
-    Sie_FS_CreateDirs(DIR, &err);
 }
 
 void KillElf() {
@@ -187,7 +191,7 @@ const struct {
 };
 
 void UpdateCSMname(void) {
-    wsprintf((WSHDR *)(&MAINCSM.maincsm_name),"SieShot");
+    wsprintf((WSHDR *)(&MAINCSM.maincsm_name), "SieShot");
 }
 
 int main() {
