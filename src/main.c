@@ -152,14 +152,9 @@ void maincsm_oncreate(CSM_RAM *data) {
     AddKeybMsgHook(KeyHook);
 }
 
-void KillElf() {
-    extern void *__ex;
-    elfclose(&__ex);
-}
-
 void maincsm_onclose(CSM_RAM *csm) {
     RemoveKeybMsgHook(KeyHook);
-    SUBPROC((void *)KillElf);
+    SUBPROC((void *)kill_elf);
 }
 
 const struct {
