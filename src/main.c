@@ -15,7 +15,7 @@ typedef struct {
 } MAIN_CSM;
 
 unsigned char *GetScreenBuffer() {
-    size_t size = CalcBitmapSize((short)ScreenW(), (short)ScreenH(), IMGHDR_TYPE_RGB565);
+    size_t size = CalcBitmapSize((short)ScreenW(), (short)ScreenH(), IMGHDR_TYPE_BGR565);
     unsigned char *buffer = malloc(size);
     memcpy(buffer, RamScreenBuffer(), size);
     return buffer;
