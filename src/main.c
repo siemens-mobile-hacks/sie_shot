@@ -55,8 +55,8 @@ char *GetPath(const char *ext) {
     char *path = NULL;
     char file_name[64];
     GetDateTime(&date, &time);
-    sprintf(file_name, "%02d_%02d_%02d-%02d_%02d_%02d.%s",
-            date.day, date.month, (unsigned int)(date.year - 2000),
+    sprintf(file_name, "%lu-%02d-%02d_%02d-%02d-%02d.%s",
+            date.year, date.day, date.month,
             time.hour, time.min, time.sec,
             ext);
     path = malloc(strlen(DIR) + strlen(file_name) + 1);
