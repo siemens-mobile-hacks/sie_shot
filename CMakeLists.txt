@@ -9,6 +9,7 @@ file(GLOB_RECURSE SOURCES "src/*.c")
 add_executable(SieShot_ELKA ${SOURCES})
 target_sdk_setup(SieShot_ELKA ELKA)
 target_compile_options(SieShot_ELKA BEFORE PUBLIC -std=c11 -Wall -Werror)
+set_target_properties(SieShot_ELKA PROPERTIES OUTPUT_NAME "SieShot")
 
 add_executable(SieShot_NSG ${SOURCES})
 target_sdk_setup(SieShot_NSG NEWSGOLD)
