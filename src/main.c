@@ -1,21 +1,33 @@
 #include <swilib.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sie/sie.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#include "config.h"
 
 const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
 
 unsigned int TAKING;
-char DIR[] = "0:\\Pictures\\Screenshots\\";
 
 typedef struct {
     CSM_RAM csm;
 } MAIN_CSM;
 
-static void RGB565_to_RGB888(uint16_t pixel, uint8_t *dest) {
+void GetFilePath(char *path, const char *ext) {
+    TDate date;
+    TTime time;
+    char file_name[64];
+    GetDateTime(&date, &time);
+    sprintf(file_name, "%lu-%02d-%02d_%02d-%02d-%02d.%s",
+            date.year, date.day, date.month,
+            time.hour, time.min, time.sec,
+            ext);
+    strcpy(path, CFG.dir);
+    strcat(path, file_name);
+}
+
+void RGB565_to_RGB888(uint16_t pixel, uint8_t *dest) {
     uint8_t r = (pixel >> 11) & 0x1F;
     uint8_t g = (pixel >> 5) & 0x3F;
     uint8_t b = pixel & 0x1F;
@@ -38,33 +50,9 @@ uint8_t *TakeScreenshot(int screen_w, int screen_h) {
     return shot;
 }
 
-void CreateOutDir() {
-    unsigned int err;
-    if (Sie_FS_MMCardExists()) {
-        DIR[0] = '4';
-    }
-    Sie_FS_CreateDirs(DIR, &err);
-}
-
-char *GetPath(const char *ext) {
-    TDate date;
-    TTime time;
-    char *path = NULL;
-    char file_name[64];
-    GetDateTime(&date, &time);
-    sprintf(file_name, "%lu-%02d-%02d_%02d-%02d-%02d.%s",
-            date.year, date.day, date.month,
-            time.hour, time.min, time.sec,
-            ext);
-    path = malloc(strlen(DIR) + strlen(file_name) + 1);
-    strcpy(path, DIR);
-    strcat(path, file_name);
-    return path;
-}
-
 void SaveScreenshot() {
-    CreateOutDir();
-    char *path = GetPath("png");
+    char path[256];
+    GetFilePath(path, "png");
 
     const int w = ScreenW();
     const int h = ScreenH();
@@ -82,7 +70,7 @@ void SaveScreenshot() {
 void TakeScreenshot_Proc() {
     if (!TAKING) {
         TAKING = 1;
-        Sie_SubProc_Run(SaveScreenshot, NULL);
+        SUBPROC(SaveScreenshot, NULL);
     } else {
         MsgBoxError(1, (int)"Screenshot is taking...");
     }
@@ -113,6 +101,12 @@ int KeyHook(int submsg, int msg) {
 }
 
 int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
+    if (msg->msg == MSG_RECONFIGURE_REQ) {
+        if (strcmpi(CFG_PATH, msg->data0) == 0) {
+            InitConfig();
+            ShowMSG(1, (int)"SieShot config updated!");
+        }
+    }
     return 1;
 }
 
@@ -161,6 +155,7 @@ int main() {
     CSM_RAM *save_cmpc;
     char dummy[sizeof(MAIN_CSM)];
     UpdateCSMname();
+    InitConfig();
     LockSched();
     save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
     CSM_root()->csm_q->current_msg_processing_csm = CSM_root()->csm_q->csm.first;
