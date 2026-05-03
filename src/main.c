@@ -51,6 +51,12 @@ uint8_t *TakeScreenshot(int screen_w, int screen_h) {
 }
 
 void SaveScreenshot(int img_format) {
+    uint32_t err;
+    if (isdir(CFG.dir, &err) <= 0) {
+        MsgBoxError(1, (int)"Output folder not found");
+        TAKING = 0;
+        return;
+    }
     char ext[8];
     switch (img_format) {
         case IMG_FORMAT_PNG:
@@ -61,7 +67,8 @@ void SaveScreenshot(int img_format) {
         break;
         default:
             MsgBoxError(1, (int)"Unknown image format");
-            return;
+            TAKING = 0;
+        return;
     }
     char path[256];
     GetFilePath(path, ext);
