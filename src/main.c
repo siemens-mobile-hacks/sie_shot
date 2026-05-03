@@ -1,8 +1,9 @@
 #include <swilib.h>
-#include <png.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sie/sie.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
@@ -14,31 +15,27 @@ typedef struct {
     CSM_RAM csm;
 } MAIN_CSM;
 
-unsigned char *GetScreenBuffer() {
-    size_t size = CalcBitmapSize((short)ScreenW(), (short)ScreenH(), IMGHDR_TYPE_BGR565);
-    unsigned char *buffer = malloc(size);
-    memcpy(buffer, RamScreenBuffer(), size);
-    return buffer;
+static void RGB565_to_RGB888(uint16_t pixel, uint8_t *dest) {
+    uint8_t r = (pixel >> 11) & 0x1F;
+    uint8_t g = (pixel >> 5) & 0x3F;
+    uint8_t b = pixel & 0x1F;
+    r = (r << 3) | (r >> 2);
+    g = (g << 2) | (g >> 4);
+    b = (b << 3) | (b >> 2);
+    dest[0] = r;
+    dest[1] = g;
+    dest[2] = b;
 }
 
-png_bytepp ScreenBuffer2BytePP(unsigned const char *bitmap) {
-    png_bytepp row_pointers = malloc(sizeof(png_bytepp) * ScreenH());
-    for (int i = 0; i < ScreenH(); i++) {
-        row_pointers[i] = malloc(sizeof(png_bytep) * ScreenW() * 3);
-        for (int j = 0; j < ScreenW(); j++) {
-            unsigned short rgb565 = *(unsigned short*)&bitmap[j * 2 + ScreenW() * i * 2];
-            unsigned char r = (rgb565 & 0xF800) >> 11;
-            unsigned char g = (rgb565 & 0x07E0) >> 5;
-            unsigned char b = rgb565 & 0x001F;
-            r = (r * 255) / 31;
-            g = (g * 255) / 63;
-            b = (b * 255) / 31;
-            row_pointers[i][j * 3] = r;
-            row_pointers[i][j * 3 + 1] = g;
-            row_pointers[i][j * 3 + 2] = b;
-        }
+uint8_t *TakeScreenshot(int screen_w, int screen_h) {
+    const size_t size = screen_w * screen_h * 3;
+    uint8_t *shot = malloc(size);
+    uint8_t *pixels = RamScreenBuffer();
+    for (int i = 0; i < screen_w * screen_h; i++) {
+        const uint16_t pixel = pixels[i * 2] | (pixels[i * 2 + 1] << 8);
+        RGB565_to_RGB888(pixel, shot + i * 3);
     }
-    return row_pointers;
+    return shot;
 }
 
 void CreateOutDir() {
@@ -65,56 +62,27 @@ char *GetPath(const char *ext) {
     return path;
 }
 
-void TakeScreenShot_PNG(void *data) {
-    png_structp png = NULL;
-    png_infop info = NULL;
-    png_bytepp row_pointers = data;
-
+void SaveScreenshot() {
     CreateOutDir();
     char *path = GetPath("png");
-    FILE *fp = fopen(path, "wb");
-    mfree(path);
 
-    unsigned int err = 1;
-    if (fp) {
-        png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-                                                  NULL, NULL, NULL);
-        if (png) {
-            info = png_create_info_struct(png);
-            if (info) {
-                png_set_IHDR(png, info,
-                             ScreenW(), ScreenH(),
-                             8, PNG_COLOR_TYPE_RGB,
-                             PNG_INTERLACE_NONE,
-                             PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-                png_init_io(png, fp);
-                png_set_rows(png, info, row_pointers);
-                png_write_png(png, info, PNG_TRANSFORM_IDENTITY, NULL);
-                err = 0;
-            }
-        }
-        fclose(fp);
-        png_destroy_write_struct(&png, &info);
+    const int w = ScreenW();
+    const int h = ScreenH();
+    uint8_t *shot = TakeScreenshot(w, h);
+    ShowMSG(1, (int)"Taking screenshot...");
+    if (stbi_write_png(path, w, h, 3, shot, w * 3)) {
         ShowMSG(1, (int)"Screenshot saved");
+    } else {
+        MsgBoxError(1, (int)"Error saving screenshot");
     }
-    for (int i = 0; i < ScreenH(); i++) {
-        mfree(row_pointers[i]);
-    }
-    mfree(row_pointers);
-    if (err) {
-        MsgBoxError(1, (int)"Error saving screenshot!");
-    }
+    mfree(shot);
     TAKING = 0;
 }
 
-void TakeScreenShot() {
+void TakeScreenshot_Proc() {
     if (!TAKING) {
         TAKING = 1;
-        ShowMSG(1, (int)"Taking screenshot...");
-        unsigned char *bitmap = GetScreenBuffer();
-        png_bytepp row_pointers = ScreenBuffer2BytePP(bitmap);
-        mfree(bitmap);
-        Sie_SubProc_Run(TakeScreenShot_PNG, row_pointers);
+        Sie_SubProc_Run(SaveScreenshot, NULL);
     } else {
         MsgBoxError(1, (int)"Screenshot is taking...");
     }
@@ -132,7 +100,7 @@ int KeyHook(int submsg, int msg) {
             }
         }
         else if (msg == LONG_PRESS) {
-            TakeScreenShot();
+            TakeScreenshot_Proc();
             return KEYHOOK_BREAK;
         }
         else if (msg == KEY_UP) {
