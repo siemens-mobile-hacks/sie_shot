@@ -8,7 +8,7 @@
 const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
 
-unsigned int TAKING;
+uint32_t TAKING;
 
 typedef struct {
     CSM_RAM csm;
@@ -124,7 +124,7 @@ int KeyHook(int submsg, int msg) {
     return KEYHOOK_NEXT;
 }
 
-int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
+int OnMessage(CSM_RAM *data, GBS_MSG *msg) {
     if (msg->msg == MSG_RECONFIGURE_REQ) {
         if (strcmpi(CFG_PATH, msg->data0) == 0) {
             InitConfig();
@@ -134,13 +134,13 @@ int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     return 1;
 }
 
-void maincsm_oncreate(CSM_RAM *data) {
+void OnCreate(CSM_RAM *data) {
     AddKeybMsgHook(KeyHook);
 }
 
-void maincsm_onclose(CSM_RAM *csm) {
+void OnClose(CSM_RAM *csm) {
     RemoveKeybMsgHook(KeyHook);
-    SUBPROC((void *)kill_elf);
+    SUBPROC(kill_elf);
 }
 
 const struct {
@@ -148,15 +148,15 @@ const struct {
     WSHDR maincsm_name;
 } MAINCSM = {
         {
-                maincsm_onmessage,
-                maincsm_oncreate,
+                OnMessage,
+                OnCreate,
 #ifdef NEWSGOLD
                 0,
                 0,
                 0,
                 0,
 #endif
-                maincsm_onclose,
+                OnClose,
                 sizeof(MAIN_CSM),
                 1,
                 &minus11
@@ -176,12 +176,11 @@ void UpdateCSMname(void) {
 }
 
 int main() {
-    CSM_RAM *save_cmpc;
     char dummy[sizeof(MAIN_CSM)];
     UpdateCSMname();
     InitConfig();
     LockSched();
-    save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
+    CSM_RAM *save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
     CSM_root()->csm_q->current_msg_processing_csm = CSM_root()->csm_q->csm.first;
     CreateCSM(&MAINCSM.maincsm,dummy,0);
     CSM_root()->csm_q->current_msg_processing_csm = save_cmpc;
