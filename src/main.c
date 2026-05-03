@@ -96,7 +96,7 @@ void TakeScreenshot_Proc() {
         TAKING = 1;
         SUBPROC(SaveScreenshot, CFG.img_format);
     } else {
-        MsgBoxError(1, (int)"Screenshot is taking...");
+        MsgBoxError(1, (int)"Screenshot already in progress");
     }
 }
 
