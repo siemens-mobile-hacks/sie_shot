@@ -50,27 +50,44 @@ uint8_t *TakeScreenshot(int screen_w, int screen_h) {
     return shot;
 }
 
-void SaveScreenshot() {
+void SaveScreenshot(int img_format) {
+    char ext[8];
+    switch (img_format) {
+        case IMG_FORMAT_PNG:
+            strcpy(ext, "png");
+        break;
+        case IMG_FORMAT_JPG:
+            strcpy(ext, "jpg");
+        break;
+        default:
+            MsgBoxError(1, (int)"Unknown image format");
+            return;
+    }
     char path[256];
-    GetFilePath(path, "png");
-
+    GetFilePath(path, ext);
     const int w = ScreenW();
     const int h = ScreenH();
     uint8_t *shot = TakeScreenshot(w, h);
     ShowMSG(1, (int)"Taking screenshot...");
-    if (stbi_write_png(path, w, h, 3, shot, w * 3)) {
+    int success = 0;
+    if (img_format == IMG_FORMAT_PNG) {
+        success = stbi_write_png(path, w, h, 3, shot, w * 3);
+    } else {
+        success = stbi_write_jpg(path, w, h, 3, shot, 100);
+    }
+    mfree(shot);
+    if (success) {
         ShowMSG(1, (int)"Screenshot saved");
     } else {
         MsgBoxError(1, (int)"Error saving screenshot");
     }
-    mfree(shot);
     TAKING = 0;
 }
 
 void TakeScreenshot_Proc() {
     if (!TAKING) {
         TAKING = 1;
-        SUBPROC(SaveScreenshot, NULL);
+        SUBPROC(SaveScreenshot, CFG.img_format);
     } else {
         MsgBoxError(1, (int)"Screenshot is taking...");
     }
