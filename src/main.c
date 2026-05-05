@@ -102,7 +102,7 @@ void TakeScreenshot_Proc() {
 
 int KeyHook(int submsg, int msg) {
     static int flag = 0;
-    if (submsg == GREEN_BUTTON) {
+    if (submsg == CFG.hotkey) {
         if (msg == KEY_DOWN) {
             if (flag) {
                 flag = 0;

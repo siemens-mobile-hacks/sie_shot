@@ -9,6 +9,8 @@ CONFIG CFG = {
     {CFG_CBOX, "Image format", 0, 2},
     IMG_FORMAT_PNG,
     {{"PNG"}, {"JPEG"}},
+    {CFG_KEYCODE, "Hotkey (long press)"},
+    GREEN_BUTTON,
 };
 
 void InitConfig() {

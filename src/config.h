@@ -14,6 +14,8 @@ typedef struct {
     const CFG_HDR cfghdr_1;
     unsigned int img_format;
     const CFG_CBOX_ITEM cfgcbox_1[2];
+    const CFG_HDR cfghdr_2;
+    unsigned int hotkey;
 } CONFIG;
 #pragma pack(pop)
 
