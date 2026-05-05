@@ -42,7 +42,7 @@ void RGB565_to_RGB888(uint16_t pixel, uint8_t *dest) {
 uint8_t *TakeScreenshot(int screen_w, int screen_h) {
     const size_t size = screen_w * screen_h * 3;
     uint8_t *shot = malloc(size);
-    uint8_t *pixels = RamScreenBuffer();
+    const uint8_t *pixels = RamScreenBuffer();
     for (int i = 0; i < screen_w * screen_h; i++) {
         const uint16_t pixel = pixels[i * 2] | (pixels[i * 2 + 1] << 8);
         RGB565_to_RGB888(pixel, shot + i * 3);
@@ -91,15 +91,6 @@ void SaveScreenshot(int img_format) {
     TAKING = 0;
 }
 
-void TakeScreenshot_Proc() {
-    if (!TAKING) {
-        TAKING = 1;
-        SUBPROC(SaveScreenshot, CFG.img_format);
-    } else {
-        MsgBoxError(1, (int)"Screenshot already in progress");
-    }
-}
-
 int KeyHook(int submsg, int msg) {
     static int flag = 0;
     if (submsg == CFG.hotkey) {
@@ -112,7 +103,12 @@ int KeyHook(int submsg, int msg) {
             }
         }
         else if (msg == LONG_PRESS) {
-            TakeScreenshot_Proc();
+            if (!TAKING) {
+                TAKING = 1;
+                SUBPROC(SaveScreenshot, CFG.img_format);
+            } else {
+                MsgBoxError(1, (int)"Screenshot already in progress");
+            }
             return KEYHOOK_BREAK;
         }
         else if (msg == KEY_UP) {
