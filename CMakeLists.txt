@@ -1,20 +1,24 @@
-cmake_minimum_required(VERSION 3.28.2)
+cmake_minimum_required(VERSION 3.31)
 
 include(../sdk/config.cmake)
-project(sieelf_sie_shot C)
+project(sieelf_sie_shot VERSION 1.0 LANGUAGES C)
 
-link_libraries(crt crt_helper c gcc m)
 file(GLOB_RECURSE SOURCES "src/*.c")
 
-add_executable(SieShot_ELKA ${SOURCES})
-target_sdk_setup(SieShot_ELKA ELKA)
-target_compile_options(SieShot_ELKA BEFORE PUBLIC -std=c11 -Wall -Werror)
-set_target_properties(SieShot_ELKA PROPERTIES OUTPUT_NAME "SieShot")
+function(add_target target platform)
+    add_executable(${target} ${SOURCES})
+    target_sdk_setup(${target} ${platform})
+    target_link_libraries(${target} PRIVATE crt crt_helper c gcc)
+    target_compile_definitions(${target} PRIVATE SWILIB_MODERN)
+    target_compile_options(${target} PRIVATE -Wall -Werror)
+    set_target_properties(${target} PROPERTIES
+            C_STANDARD 11
+            C_STANDARD_REQUIRED ON
+            C_EXTENSIONS OFF
+            OUTPUT_NAME "SieShot_${platform}"
+    )
+endfunction()
 
-add_executable(SieShot_NSG ${SOURCES})
-target_sdk_setup(SieShot_NSG NEWSGOLD)
-target_compile_options(SieShot_NSG BEFORE PUBLIC -std=c11 -Wall -Werror)
-
-add_executable(SieShot_SG ${SOURCES})
-target_sdk_setup(SieShot_SG SG)
-target_compile_options(SieShot_SG BEFORE PUBLIC -std=c11 -Wall -Werror)
+add_target(SieShot_SG   SG)
+add_target(SieShot_NSG  NSG)
+add_target(SieShot_ELKA ELKA)
