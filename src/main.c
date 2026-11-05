@@ -122,7 +122,17 @@ int OnMessage(CSM_RAM *data, GBS_MSG *msg) {
     } else if (msg->msg == MSG_IPC) {
         const IPC_REQ *ipc = msg->data0;
         if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
-            if (msg->submess == IPC_TAKE_SCREENSHOT) {
+            if (msg->submess == IPC_SECOND_LAUNCH) {
+                int ipc_csm_id = (int)ipc->data;
+                if (csm->csm.id != ipc_csm_id) { // double run
+                    MAIN_CSM *new_csm = (MAIN_CSM*)FindCSMbyID(ipc_csm_id);
+                    if (new_csm) {
+                        new_csm->csm.state = CSM_STATE_CLOSED;
+                        static IPC_REQ ipc_req;
+                        IPC_SendMessage(&ipc_req, IPC_TAKE_SCREENSHOT);
+                    }
+                }
+            } else if (msg->submess == IPC_TAKE_SCREENSHOT) {
                 if (!csm->hobj) {
                     uint32_t err;
                     if (isdir(CFG.dir, &err) > 0) {
@@ -151,7 +161,11 @@ int OnMessage(CSM_RAM *data, GBS_MSG *msg) {
 }
 
 void OnCreate(CSM_RAM *data) {
+    MAIN_CSM *csm = (MAIN_CSM*)data;
     KeyHook_Register();
+    static IPC_REQ ipc;
+    ipc.data = (void*)csm->csm.id;
+    IPC_SendMessage(&ipc, IPC_SECOND_LAUNCH);
 }
 
 void KillElf(MAIN_CSM *csm) {
