@@ -130,7 +130,7 @@ int OnMessage(CSM_RAM *data, GBS_MSG *msg) {
         if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
             if (msg->submess == IPC_SECOND_LAUNCH) {
                 int ipc_csm_id = (int)ipc->data;
-                if (csm->csm.id != ipc_csm_id) { // double run
+                if (csm->csm.id != ipc_csm_id) {
                     MAIN_CSM *new_csm = (MAIN_CSM*)FindCSMbyID(ipc_csm_id);
                     if (new_csm) {
                         new_csm->csm.state = CSM_STATE_CLOSED;
