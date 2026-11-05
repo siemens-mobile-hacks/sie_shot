@@ -46,7 +46,7 @@ WSHDR *GetFilePath() {
     return ws;
 }
 
-int TakeScreenshot(MAIN_CSM *csm, const WSHDR *path) {
+int TakeScreenshot(MAIN_CSM *csm, const WSHDR *path_ws) {
     csm->img = malloc(sizeof(IMGHDR));
     zeromem(csm->img, sizeof(IMGHDR));
     csm->img->w = ScreenW();
@@ -58,7 +58,7 @@ int TakeScreenshot(MAIN_CSM *csm, const WSHDR *path) {
 
     uint32_t err;
     int status = 0;
-    int uid = GetExtUidByFileName_ws(path);
+    int uid = GetExtUidByFileName_ws(path_ws);
     csm->hobj = Obs_CreateObject(0x2D, uid, 2, MSG_ID, 1, 0, &err);
     if (!csm->hobj) {
         return 0;
@@ -79,7 +79,13 @@ int TakeScreenshot(MAIN_CSM *csm, const WSHDR *path) {
         Obs_DestroyObject(csm->hobj);
         return 0;
     }
+#ifdef NEWSGOLD
+    status = Obs_SetOutput_File(csm->hobj, path_ws);
+#else
+    char path[256];
+    ws_2str(path_ws, path, 255);
     status = Obs_SetOutput_File(csm->hobj, path);
+#endif
     if (status != 0 && status < 0x8000) {
         Obs_DestroyObject(csm->hobj);
         return 0;
